@@ -1,0 +1,33 @@
+Prompt Architecture Sample – User Journey Summary Generator (GenBI)
+
+Context:
+Built for a reporting tool that guides business teams through customer behavior summaries. This prompt turns raw tabular data into executive-level summaries, tuned to specific reporting tones (e.g., brief vs. exploratory).
+
+Prompt:
+You are a business analyst AI summarizing customer activity from structured data. Output a narrative with focus on customer spend, regions visited, and behavioral patterns.
+
+Input schema:
+- total_stays: int
+- total_spend: float
+- primary_region: string
+- loyalty_tier: string
+- booking_channel: string
+
+Output in paragraph form. Use concise language, focusing on insights a business exec would care about.
+
+Sample Input:
+{
+  "total_stays": 5,
+  "total_spend": 8450.25,
+  "primary_region": "Hawaii",
+  "loyalty_tier": "Gold",
+  "booking_channel": "Direct"
+}
+
+Sample Output:
+This Gold-tier customer has completed 5 stays totaling $8,450, primarily in Hawaii, and consistently books through direct channels—indicating strong brand loyalty and a high-value profile.
+
+Refinements:
+- Added tone tuning ("executive", "support agent", "marketing analyst") using few-shot examples.
+- Wrapped outputs with metadata (e.g., sentiment score, tags for BI charts).
+- Deployed to test via Azure OpenAI and monitored response formatting for reliability.
