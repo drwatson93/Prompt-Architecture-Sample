@@ -1,7 +1,9 @@
-Prompt Architecture Sample – Goal Decomposition to Tasks
+Prompt Architecture Sample – Goal Decomposition to Tasks (Agent-Oriented Task Planning)
 
 Context:
-Part of a prototype system that transforms user-stated goals into structured execution steps. The goal was to simulate how an AI agent could scaffold a user’s high-level intent (e.g., “launch a marketing campaign”) into actionable tasks using LLM prompting.
+This prompt is part of a modular task engine I designed to convert ambiguous user goals into structured execution plans. It simulates how a user-facing interface could capture high-level intent (e.g., “launch a product”) and translate that into benchmark-aligned tasks, each with metadata that supports downstream AI agent matching.
+
+The system was built as a prototype for a multi-agent workflow planner, where each task could be routed to an AI agent, user, or hybrid chain depending on type, priority, and required inputs. The goal decomposition prompt was architected to act as the front-end logic layer—forming the "task tree" from which orchestration logic (agent routing, scheduling, handoff) operates.
 
 Prompt:
 You are a task architect AI. Your job is to help users break large goals into clear, actionable steps. The goal is: "{{user_goal}}"
@@ -12,11 +14,21 @@ Respond in JSON format with the following structure:
   "benchmarks": [
     {
       "name": "...",
-      "tasks": ["...", "..."]
+      "tasks": [
+        {
+          "description": "...",
+          "task_type": "...",
+          "estimated_time_minutes": int
+        }
+      ]
     }
   ]
 }
-Make sure tasks are sequential, specific, and progress the user toward the benchmark.
+
+Requirements:
+- Ensure tasks are sequential, domain-relevant, and logically progress toward benchmark completion.
+- Include estimated time for each task to support scheduling and agent load balancing.
+- Assign a task_type (e.g., research, copywriting, design) to support downstream AI agent selection.
 
 Sample Input:
 User Goal: Launch a targeted email marketing campaign for our new product
@@ -28,31 +40,69 @@ Sample Output:
     {
       "name": "Audience Preparation",
       "tasks": [
-        "Define customer segments for the campaign",
-        "Export clean email lists from CRM",
-        "Verify contact permissions and preferences"
+        {
+          "description": "Define customer segments for the campaign",
+          "task_type": "strategy",
+          "estimated_time_minutes": 45
+        },
+        {
+          "description": "Export clean email lists from CRM",
+          "task_type": "data_operations",
+          "estimated_time_minutes": 30
+        },
+        {
+          "description": "Verify contact permissions and preferences",
+          "task_type": "compliance",
+          "estimated_time_minutes": 20
+        }
       ]
     },
     {
       "name": "Content Development",
       "tasks": [
-        "Draft initial campaign email copy",
-        "Design email templates in marketing platform",
-        "A/B test subject lines with internal team"
+        {
+          "description": "Draft initial campaign email copy",
+          "task_type": "copywriting",
+          "estimated_time_minutes": 60
+        },
+        {
+          "description": "Design email templates in marketing platform",
+          "task_type": "design",
+          "estimated_time_minutes": 75
+        },
+        {
+          "description": "A/B test subject lines with internal team",
+          "task_type": "collaboration",
+          "estimated_time_minutes": 30
+        }
       ]
     },
     {
       "name": "Launch and Monitor",
       "tasks": [
-        "Schedule send and monitor deliverability",
-        "Track open rates and click-throughs",
-        "Adjust follow-ups based on performance"
+        {
+          "description": "Schedule send and monitor deliverability",
+          "task_type": "execution",
+          "estimated_time_minutes": 15
+        },
+        {
+          "description": "Track open rates and click-throughs",
+          "task_type": "analytics",
+          "estimated_time_minutes": 20
+        },
+        {
+          "description": "Adjust follow-ups based on performance",
+          "task_type": "optimization",
+          "estimated_time_minutes": 30
+        }
       ]
     }
   ]
 }
 
 Refinements:
-- Enforced JSON schema for downstream compatibility.
-- Tuned prompts to be domain-sensitive (e.g., switching benchmarks for finance vs marketing goals).
-- Added contextual memory for prior goal structures to improve coherence in multi-turn use.
+- Added domain-specific task typing to support downstream agent matching and marketplace routing.
+- Integrated estimated time metadata to allow intelligent batching and parallelization of tasks.
+- Tuned few-shot examples to improve logical grouping of tasks under benchmarks and to eliminate hallucinated benchmarks.
+- Introduced schema validation using `pydantic` to enforce consistency across multi-agent pipelines.
+- Tested prompt variants across domains (marketing, engineering, recruiting) to ensure generalizability of logic tree generation.
