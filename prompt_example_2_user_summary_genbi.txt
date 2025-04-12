@@ -1,10 +1,12 @@
-Prompt Architecture Sample – User Journey Summary Generator (GenBI)
+Prompt Architecture Sample – User Journey Summary Generator (GenBI for Executive Reporting)
 
 Context:
-Built for a reporting tool that guides business teams through customer behavior summaries. This prompt turns raw tabular data into executive-level summaries, tuned to specific reporting tones (e.g., brief vs. exploratory).
+This prompt was designed as part of an internal GenBI (Generative Business Intelligence) module that converts structured customer data into human-readable, executive-facing summaries. The goal was to enable AI agents to summarize user behaviour in a way that blends numerical insight with natural language—ideal for product, marketing, and sales teams making real-time decisions.
+
+The system receives structured tabular input from a feature store or analytics engine and uses prompt templates to generate high-signal, domain-specific narratives. These summaries are injected into dashboards, emails, and CRM profiles to guide stakeholder decisions. This prompt is also part of a multi-agent system in which one agent fetches the user context, another handles data transformation, and this one generates the summary.
 
 Prompt:
-You are a business analyst AI summarizing customer activity from structured data. Output a narrative with focus on customer spend, regions visited, and behavioral patterns.
+You are a business analyst AI summarizing customer activity based on structured input. Output a concise, narrative-style summary that highlights customer value, behaviour patterns, and trends.
 
 Input schema:
 - total_stays: int
@@ -12,8 +14,11 @@ Input schema:
 - primary_region: string
 - loyalty_tier: string
 - booking_channel: string
+- avg_nights_per_stay: float
+- recent_stay_date: string (YYYY-MM-DD)
 
-Output in paragraph form. Use concise language, focusing on insights a business exec would care about.
+Output:
+Generate a paragraph-style narrative with business-relevant insights. Highlight engagement level, spending behaviour, and brand loyalty. Usea  professional tone suitable for C-suite review. Avoid generic filler language.
 
 Sample Input:
 {
@@ -21,13 +26,22 @@ Sample Input:
   "total_spend": 8450.25,
   "primary_region": "Hawaii",
   "loyalty_tier": "Gold",
-  "booking_channel": "Direct"
+  "booking_channel": "Direct",
+  "avg_nights_per_stay": 3.2,
+  "recent_stay_date": "2025-03-18"
 }
 
 Sample Output:
-This Gold-tier customer has completed 5 stays totaling $8,450, primarily in Hawaii, and consistently books through direct channels—indicating strong brand loyalty and a high-value profile.
+This Gold-tier customer has completed 5 stays totalling $8,450, with an average duration of 3.2 nights per trip. They primarily visit Hawaii and consistently book through direct channels, indicating strong brand engagement. Their most recent stay was on March 18, 2025, suggesting they are an active, high-value traveller.
 
 Refinements:
-- Added tone tuning ("executive", "support agent", "marketing analyst") using few-shot examples.
-- Wrapped outputs with metadata (e.g., sentiment score, tags for BI charts).
-- Deployed to test via Azure OpenAI and monitored response formatting for reliability.
+- Added tone control by defining “executive,” “agent support,” and “marketing analyst” output modes using few-shot prompt variations.
+- Used schema-based validation (e.g., Pydantic) to ensure LLMs only process complete and correctly formatted input.
+- Implemented fallback logic: if `recent_stay_date` is missing, omit temporal recency language to avoid hallucinated recency claims.
+- Tuned to handle edge cases (e.g., zero stays, low spend, non-direct booking) with graceful degradation in output tone.
+- Deployed using Azure OpenAI with system message scaffolding for consistent persona anchoring, regardless of input variability.
+
+Integration Points:
+- Used in a multi-agent orchestration layer where this summarization module is invoked after a data-cleaning and segmentation phase.
+- Summaries are cached and used across systems (CRM, dashboard overlays, retention models), making tone and consistency critical.
+- Designed to be language-model-agnostic for future integration with Claude or Mistral variants.
